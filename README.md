@@ -1,6 +1,6 @@
-# User Data API
+# User Data API: Back-End Technical Assessment
 
-An Express + TypeScript API that serves user data behind an LRU cache, a burst-aware rate limiter, and a concurrency-limited async queue.
+Technical assessment showcasing a user-data API built with the Express + TypeScript stack, serving mock users behind an LRU cache, a burst-aware rate limiter, and a concurrency-limited async queue. Built to the "User Data API with Advanced Caching, Rate Limiting, and Asynchronous Processing" brief.
 
 ## Getting started
 
@@ -12,18 +12,21 @@ pnpm dev          # tsx watch, http://localhost:3000
 ```bash
 pnpm test         # unit + integration tests (Vitest + Supertest)
 pnpm lint         # ESLint
+pnpm format       # Prettier check
 pnpm typecheck    # tsc, strict mode
 pnpm build        # emit dist/, then `pnpm start`
 ```
+
+CI runs lint, format, typecheck, test and build on every push.
 
 ## Project structure
 
 ```
 src/
-  server.ts        entry point — starts the cache sweeper and listens
+  server.ts        entry point, starts the cache sweeper and listens
   app.ts           app wiring: middleware + route mounting
   config.ts        tunables (TTL, rate limits, simulated latency)
-  lib/             reusable primitives — lru-cache, async-queue
+  lib/             reusable primitives: lru-cache, async-queue
   middleware/      rate-limit, request-timer, error-handlers
   users/           store (mock data + single-flight) and routes
 ```
@@ -46,7 +49,7 @@ curl localhost:3000/cache-status
 
 ## Caching
 
-`LruCache` is a `Map`-backed LRU with a per-entry TTL of 60 seconds. `Map` preserves insertion order, so promoting an entry on read is a delete-then-set, and eviction past the capacity removes the oldest key. Hits and misses are counted as they happen, and a background sweeper (`setInterval`, unref'd so it never holds the process open) prunes expired entries every 10 seconds — reads also drop expired entries lazily.
+`LruCache` is a `Map`-backed LRU with a per-entry TTL of 60 seconds. `Map` preserves insertion order, so promoting an entry on read is a delete-then-set, and eviction past the capacity removes the oldest key. Hits and misses are counted as they happen, and a background sweeper (`setInterval`, unref'd so it never holds the process open) prunes expired entries every 10 seconds. Reads also drop expired entries lazily.
 
 ## Concurrent requests
 
@@ -62,4 +65,4 @@ A timing middleware records each response's duration and status on `finish`, fee
 
 ## Tradeoffs
 
-State is all in-process: the cache, the per-IP rate-limit buckets, and the user store live in memory, so a restart drops them and a second instance wouldn't share them. That keeps the project self-contained for the exercise; scaling out means moving the cache and buckets behind Redis and the queue onto something durable like Bull. The queue itself is a plain array with a concurrency cap — it models a connection pool but has no retries or persistence. Missing ids aren't negatively cached, so a 404 always re-checks the store rather than serve a stale absence; worth revisiting if real lookups were expensive. And metrics are process-local counters on `/cache-status` rather than a Prometheus exporter — enough to show the caching effect and error rate without pulling in a metrics stack.
+State is all in-process: the cache, the per-IP rate-limit buckets, and the user store live in memory, so a restart drops them and a second instance wouldn't share them. That keeps the project self-contained for the exercise; scaling out means moving the cache and buckets behind Redis and the queue onto something durable like Bull. The queue itself is a plain array with a concurrency cap. It models a connection pool but has no retries or persistence. Missing ids aren't negatively cached, so a 404 always re-checks the store rather than serve a stale absence; worth revisiting if real lookups were expensive. And metrics are process-local counters on `/cache-status` rather than a Prometheus exporter, enough to show the caching effect and error rate without pulling in a metrics stack.
