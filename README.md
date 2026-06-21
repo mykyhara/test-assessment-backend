@@ -16,6 +16,18 @@ pnpm typecheck    # tsc, strict mode
 pnpm build        # emit dist/, then `pnpm start`
 ```
 
+## Project structure
+
+```
+src/
+  server.ts        entry point — starts the cache sweeper and listens
+  app.ts           app wiring: middleware + route mounting
+  config.ts        tunables (TTL, rate limits, simulated latency)
+  lib/             reusable primitives — lru-cache, async-queue
+  middleware/      rate-limit, request-timer, error-handlers
+  users/           store (mock data + single-flight) and routes
+```
+
 ## Endpoints
 
 | Method | Path            | Description                                                              |
@@ -47,9 +59,3 @@ Each client (by IP) gets two token buckets that must both admit a request: a sus
 ## Metrics
 
 A timing middleware records each response's duration and status on `finish`, feeding the averages and error count exposed by `/cache-status`.
-
-## Notes
-
-- Body parsing uses the built-in `express.json()` (body-parser is now part of Express 5).
-- The rate limiter keys on `req.ip`; behind a proxy, enable `trust proxy` so the client IP is read from `X-Forwarded-For`.
-- The mock store seeds three users (ids 1–3); created users continue the id sequence.

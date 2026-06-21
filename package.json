@@ -4,11 +4,11 @@
   "description": "User data API with LRU caching, rate limiting and async processing",
   "author": "mykyhara <harashchenko.mykyta.me@gmail.com>",
   "license": "MIT",
-  "main": "dist/index.js",
+  "main": "dist/server.js",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx watch src/server.ts",
     "build": "tsc -p tsconfig.build.json",
-    "start": "node dist/index.js",
+    "start": "node dist/server.js",
     "lint": "eslint .",
     "format": "prettier --check .",
     "format:write": "prettier --write .",
@@ -17,7 +17,8 @@
   },
   "dependencies": {
     "cors": "^2.8.6",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

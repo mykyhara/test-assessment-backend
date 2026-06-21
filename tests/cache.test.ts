@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { LruCache } from '../src/cache';
+import { LruCache } from '../src/lib/lru-cache';
 
 describe('LruCache', () => {
   beforeEach(() => vi.useFakeTimers());

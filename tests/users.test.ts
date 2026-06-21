@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { UserStore } from '../src/users';
+import { UserStore } from '../src/users/store';
 
 describe('UserStore', () => {
   it('coalesces concurrent fetches for the same id into a single read', async () => {

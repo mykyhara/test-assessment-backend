@@ -1,4 +1,4 @@
-import { AsyncQueue } from './queue';
+import { AsyncQueue } from '../lib/async-queue';
 
 export interface User {
   id: number;

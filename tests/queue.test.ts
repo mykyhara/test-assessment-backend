@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { AsyncQueue } from '../src/queue';
+import { AsyncQueue } from '../src/lib/async-queue';
 
 describe('AsyncQueue', () => {
   it('never runs more tasks than the concurrency limit', async () => {
