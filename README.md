@@ -59,3 +59,7 @@ Each client (by IP) gets two token buckets that must both admit a request: a sus
 ## Metrics
 
 A timing middleware records each response's duration and status on `finish`, feeding the averages and error count exposed by `/cache-status`.
+
+## Tradeoffs
+
+State is all in-process: the cache, the per-IP rate-limit buckets, and the user store live in memory, so a restart drops them and a second instance wouldn't share them. That keeps the project self-contained for the exercise; scaling out means moving the cache and buckets behind Redis and the queue onto something durable like Bull. The queue itself is a plain array with a concurrency cap — it models a connection pool but has no retries or persistence. Missing ids aren't negatively cached, so a 404 always re-checks the store rather than serve a stale absence; worth revisiting if real lookups were expensive. And metrics are process-local counters on `/cache-status` rather than a Prometheus exporter — enough to show the caching effect and error rate without pulling in a metrics stack.
