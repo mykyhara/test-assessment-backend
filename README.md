@@ -1,0 +1,55 @@
+# User Data API
+
+An Express + TypeScript API that serves user data behind an LRU cache, a burst-aware rate limiter, and a concurrency-limited async queue.
+
+## Getting started
+
+```bash
+pnpm install
+pnpm dev          # tsx watch, http://localhost:3000
+```
+
+```bash
+pnpm test         # unit + integration tests (Vitest + Supertest)
+pnpm lint         # ESLint
+pnpm typecheck    # tsc, strict mode
+pnpm build        # emit dist/, then `pnpm start`
+```
+
+## Endpoints
+
+| Method | Path            | Description                                                              |
+| ------ | --------------- | ------------------------------------------------------------------------ |
+| GET    | `/users/:id`    | Returns a user. `X-Cache: HIT\|MISS`. 400 for invalid id, 404 if absent. |
+| POST   | `/users`        | Creates a user (`name`, `email`), caches it, returns 201.                |
+| DELETE | `/cache`        | Clears the cache (204).                                                  |
+| GET    | `/cache-status` | Cache size, hits, misses, request count, errors, avg response time.      |
+| GET    | `/health`       | Liveness check.                                                          |
+
+```bash
+curl localhost:3000/users/1            # ~200ms (miss), then instant (hit)
+curl -X POST localhost:3000/users -H 'content-type: application/json' -d '{"name":"Bob","email":"bob@example.com"}'
+curl localhost:3000/cache-status
+```
+
+## Caching
+
+`LruCache` is a `Map`-backed LRU with a per-entry TTL of 60 seconds. `Map` preserves insertion order, so promoting an entry on read is a delete-then-set, and eviction past the capacity removes the oldest key. Hits and misses are counted as they happen, and a background sweeper (`setInterval`, unref'd so it never holds the process open) prunes expired entries every 10 seconds — reads also drop expired entries lazily.
+
+## Concurrent requests
+
+A cache miss simulates a 200ms database read. Two layers handle load: requests for the same id are coalesced with a single-flight map, so concurrent callers for one id share one read and all resolve from it; and all reads pass through an `AsyncQueue` that caps how many simulated reads run at once, modelling a connection pool. The cache is only written after a miss resolves, so a cached id never triggers a read.
+
+## Rate limiting
+
+Each client (by IP) gets two token buckets that must both admit a request: a sustained bucket of 10 tokens that refills over 60 seconds, and a burst bucket of 5 tokens that refills over 10 seconds. Tokens are checked atomically before either is consumed, so a rejected request never spends one. Over the limit returns 429 with a `Retry-After` header.
+
+## Metrics
+
+A timing middleware records each response's duration and status on `finish`, feeding the averages and error count exposed by `/cache-status`.
+
+## Notes
+
+- Body parsing uses the built-in `express.json()` (body-parser is now part of Express 5).
+- The rate limiter keys on `req.ip`; behind a proxy, enable `trust proxy` so the client IP is read from `X-Forwarded-For`.
+- The mock store seeds three users (ids 1–3); created users continue the id sequence.
