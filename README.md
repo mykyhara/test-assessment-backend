@@ -1,3 +1,10 @@
+# Short Intro
+Hi Muhammad,
+Thanks for the challenge — really enjoyed it! I've put my full solution together in a Notion doc here:
+https://brief-capacity-b5e.notion.site/Mykyta-Harashchenko-Developer-Challenge-aiseo-384bdef5963f80c58ca1e475dce15724
+
+---
+
 # User Data API: Back-End Technical Assessment
 
 Technical assessment showcasing a user-data API built with the Express + TypeScript stack, serving mock users behind an LRU cache, a burst-aware rate limiter, and a concurrency-limited async queue. Built to the "User Data API with Advanced Caching, Rate Limiting, and Asynchronous Processing" brief.
